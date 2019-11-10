@@ -14,6 +14,7 @@ public class Automaton {
 
     private int state;
     private int line;
+	private int cm;
 
     static final HashMap<String, String> reserved = new HashMap<String, String>() {
         {
@@ -57,6 +58,7 @@ public class Automaton {
     public Automaton() {
         this.state = 0;
         this.line = 1;
+		this.cm = 0;
     }
 
     private boolean transition(String symbol) {
@@ -73,7 +75,7 @@ public class Automaton {
                     state = 2;
                 } else if (symbol.matches("\\d")) {
                     state = 3;
-                } else if (symbol.matches(";|\\.|(|)|,")) {
+                } else if (symbol.matches(";|\\.|,|\\(|\\)")) {
                     state = 5;
                 } else if (symbol.matches(":")) {
                     state = 6;
@@ -97,6 +99,7 @@ public class Automaton {
                     state = 0;
                 } else if (symbol.matches("\\n")) {
                     line++;
+					cm = 1;
                 }
                 break;
             //identificador
@@ -177,7 +180,7 @@ public class Automaton {
                 while (classification.get(stateBuffer.peek()).equals("NF")) {
                     stateBuffer.pop();
                     count++;
-                    if (count == stateBuffer.size()) {
+                    if (0 == stateBuffer.size()) {
                         //erro caractere nao indentificado
                     }
                 }
@@ -187,7 +190,8 @@ public class Automaton {
                 } else {
                     cla = classification.get(stateBuffer.peek());
                 }
-                System.out.println(wordBuffer.substring(0, wordBuffer.length() - count) + "|" + cla + "|" + line);
+                //System.out.println(wordBuffer.substring(0, wordBuffer.length() - count) + "|" + cla + "|" + line);
+				System.out.printf("%-20s%-28s%-14s%s\n", "|" + wordBuffer.substring(0, wordBuffer.length() - count), "|" + cla, "|" + line,"|");
                 state = 0;
                 process(wordBuffer.substring(wordBuffer.length() - count));
                 //wordBuffer = "";
@@ -215,6 +219,13 @@ public class Automaton {
                 if (state != 0 && state != 1) {
                     wordBuffer += cha;
                 }
+				
+				//erro de comentário
+				if(cm == 1){
+                    System.out.println("Erro: Comentário aberto e não fechado");
+                    break;
+                }
+				
                 if (!acc) {
                     int count = 1;
                     while (classification.get(stateBuffer.peek()).equals("NF")) {
@@ -230,7 +241,8 @@ public class Automaton {
                     } else {
                         cla = classification.get(stateBuffer.peek());
                     }
-                    System.out.println(wordBuffer.substring(0, wordBuffer.length() - count) + "|" + cla + "|" + line);
+					//System.out.println(wordBuffer.substring(0, wordBuffer.length() - count) + "|" + cla + "|" + line);
+					System.out.printf("%-20s%-28s%-14s%s\n", "|" + wordBuffer.substring(0, wordBuffer.length() - count), "|" + cla, "|" + line,"|");
                     state = 0;
                     wordBuffer = process(wordBuffer.substring(wordBuffer.length() - count));
                 }
@@ -247,9 +259,11 @@ public class Automaton {
     }
 
     public static void main(String[] arg) {
-        File file = new File("C:\\Users\\Pablo Suria\\Desktop\\teste.txt");
+        File file = new File("C:\\Users\\luyza\\Desktop\\Algoritmos\\Automato\\src\\automato\\pascal.txt");
         Automaton a = new Automaton();
+        System.out.println("|-------------------|---------------------------|-------------|");
+        System.out.printf("%-8s%-12s%-8s%-20s%-5s%-9s%s\n","|","Token","|","Classificação","|","Linha","|");
+		System.out.println("|-------------------|---------------------------|-------------|");
         a.parse(file);
-
     }
 }
