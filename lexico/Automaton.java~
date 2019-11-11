@@ -14,7 +14,6 @@ public class Automaton {
 
     private int state;
     private int line;
-    private LinkedList<Token> tokenList;
 
     static final HashMap<String, String> reserved = new HashMap<String, String>() {
         {
@@ -58,7 +57,6 @@ public class Automaton {
     public Automaton() {
         this.state = 0;
         this.line = 1;
-        this.tokenList = new LinkedList<>();
     }
 
     private boolean transition(String symbol) {
@@ -179,26 +177,27 @@ public class Automaton {
                 while (classification.get(stateBuffer.peek()).equals("NF")) {
                     stateBuffer.pop();
                     count++;
-                    if (stateBuffer.isEmpty()) {
-                        System.out.println("Erro: Simbolo Não identificado");
+                    if (0 == stateBuffer.size()) {
+                        System.out.println("weeerqweasdasdas");
                         System.exit(1);
                     }
                 }
                 String cla;
-                if (state == 2 && reserved.containsKey(wordBuffer.substring(0, wordBuffer.length() - count))) {
-                    cla = reserved.get(wordBuffer.substring(0, wordBuffer.length() - count));
+                if (state == 2 && reserved.containsKey(wordBuffer.length() - count)) {
+                    cla = reserved.get(wordBuffer.length() - count);
                 } else {
                     cla = classification.get(stateBuffer.peek());
                 }
-                tokenList.add(new Token(wordBuffer.substring(0, wordBuffer.length() - count), cla, line));
+                //System.out.println(wordBuffer.substring(0, wordBuffer.length() - count) + "|" + cla + "|" + line);
+				System.out.printf("%-20s%-28s%-14s%s\n", "|" + wordBuffer.substring(0, wordBuffer.length() - count), "|" + cla, "|" + line,"|");
                 state = 0;
-                wordBuffer = process(wordBuffer.substring(wordBuffer.length() - count));
+                process(wordBuffer.substring(wordBuffer.length() - count));
             }
         }
         return wordBuffer;
     }
 
-    public LinkedList<Token> parse(File file) {
+    public void parse(File file) {
         FileReader fr = null;
         try {
             fr = new FileReader(file);
@@ -217,15 +216,15 @@ public class Automaton {
                 if (state != 0 && state != 1) {
                     wordBuffer += cha;
                 }
-
+				
                 if (!acc) {
                     int count = 1;
                     while (classification.get(stateBuffer.peek()).equals("NF")) {
                         stateBuffer.pop();
                         count++;
-                        if (stateBuffer.isEmpty()) {
-                            System.out.println("Erro: Simbolo nao identificado");
-                            System.exit(1);
+                        if (0 == stateBuffer.size()) {
+                            System.out.println("weeerqweasdasdas");
+                                                    System.exit(1);
                         }
                     }
                     String cla;
@@ -234,11 +233,9 @@ public class Automaton {
                     } else {
                         cla = classification.get(stateBuffer.peek());
                     }
-                    
-                    tokenList.add(new Token(wordBuffer.substring(0, wordBuffer.length() - count), cla, line));
+					//System.out.println(wordBuffer.substring(0, wordBuffer.length() - count) + "|" + cla + "|" + line);
+					System.out.printf("%-20s%-28s%-14s%s\n", "|" + wordBuffer.substring(0, wordBuffer.length() - count), "|" + cla, "|" + line,"|");
                     state = 0;
-                    stateBuffer.clear();
-                    
                     wordBuffer = process(wordBuffer.substring(wordBuffer.length() - count));
                 }
 
@@ -252,22 +249,19 @@ public class Automaton {
         }
 
         //erro de comentário
-        if (state == 1) {
+		if(state == 1){
             System.out.println("Erro: Comentário aberto e não fechado");
-            System.exit(1);
+                        System.exit(1);
         }
-        
-        return tokenList;
 
     }
 
     public static void main(String[] arg) {
         File file = new File("//home//iot//Desktop//compilador//teste");
         Automaton a = new Automaton();
-        LinkedList<Token> list = a.parse(file);
-        for(Token t : list) {
-            System.out.println(t);
-        }
+        System.out.println("|-------------------|---------------------------|-------------|");
+        System.out.printf("%-8s%-12s%-8s%-20s%-5s%-9s%s\n","|","Token","|","Classificação","|","Linha","|");
+		System.out.println("|-------------------|---------------------------|-------------|");
+        a.parse(file);
     }
 }
-
