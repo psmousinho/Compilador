@@ -14,7 +14,6 @@ public class Automaton {
 
     private int state;
     private int line;
-	private int cm;
 
     static final HashMap<String, String> reserved = new HashMap<String, String>() {
         {
@@ -58,7 +57,6 @@ public class Automaton {
     public Automaton() {
         this.state = 0;
         this.line = 1;
-		this.cm = 0;
     }
 
     private boolean transition(String symbol) {
@@ -99,7 +97,6 @@ public class Automaton {
                     state = 0;
                 } else if (symbol.matches("\\n")) {
                     line++;
-					cm = 1;
                 }
                 break;
             //identificador
@@ -181,7 +178,8 @@ public class Automaton {
                     stateBuffer.pop();
                     count++;
                     if (0 == stateBuffer.size()) {
-                        //erro caractere nao indentificado
+                        System.out.println("weeerqweasdasdas");
+                        System.exit(1);
                     }
                 }
                 String cla;
@@ -194,7 +192,6 @@ public class Automaton {
 				System.out.printf("%-20s%-28s%-14s%s\n", "|" + wordBuffer.substring(0, wordBuffer.length() - count), "|" + cla, "|" + line,"|");
                 state = 0;
                 process(wordBuffer.substring(wordBuffer.length() - count));
-                //wordBuffer = "";
             }
         }
         return wordBuffer;
@@ -220,19 +217,14 @@ public class Automaton {
                     wordBuffer += cha;
                 }
 				
-				//erro de comentário
-				if(cm == 1){
-                    System.out.println("Erro: Comentário aberto e não fechado");
-                    break;
-                }
-				
                 if (!acc) {
                     int count = 1;
                     while (classification.get(stateBuffer.peek()).equals("NF")) {
                         stateBuffer.pop();
                         count++;
                         if (0 == stateBuffer.size()) {
-                            //erro caractere nao indentificado
+                            System.out.println("weeerqweasdasdas");
+                                                    System.exit(1);
                         }
                     }
                     String cla;
@@ -256,10 +248,16 @@ public class Automaton {
             Logger.getLogger(Automaton.class.getName()).log(Level.SEVERE, null, ex);
         }
 
+        //erro de comentário
+		if(state == 1){
+            System.out.println("Erro: Comentário aberto e não fechado");
+                        System.exit(1);
+        }
+
     }
 
     public static void main(String[] arg) {
-        File file = new File("C:\\Users\\luyza\\Desktop\\Algoritmos\\Automato\\src\\automato\\pascal.txt");
+        File file = new File("//home//iot//Desktop//compilador//teste");
         Automaton a = new Automaton();
         System.out.println("|-------------------|---------------------------|-------------|");
         System.out.printf("%-8s%-12s%-8s%-20s%-5s%-9s%s\n","|","Token","|","Classificação","|","Linha","|");
