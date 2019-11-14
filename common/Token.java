@@ -1,4 +1,6 @@
-package lexico;
+package common;
+
+
 
 public class Token {
 

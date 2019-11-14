@@ -9,9 +9,9 @@ package lexico.exceptions;
  *
  * @author Pablo Suria
  */
-public class commentNotClosedException extends Exception {
+public class CommentNotClosedException extends Exception {
 
-    public commentNotClosedException() {
+    public CommentNotClosedException() {
         super("Comentario Aberto e Não Fechado");
     }
     
