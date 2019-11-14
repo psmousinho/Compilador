@@ -2,19 +2,18 @@ package lexico;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import lexico.exceptions.*;
 
 public class Automaton {
 
     private int state;
+    private int lastSafeState;
+    private String token;
     private int line;
-    private LinkedList<Token> tokenList;
 
     static final HashMap<String, String> reserved = new HashMap<String, String>() {
         {
@@ -57,8 +56,9 @@ public class Automaton {
 
     public Automaton() {
         this.state = 0;
+        this.lastSafeState = 0;
+        this.token = "";
         this.line = 1;
-        this.tokenList = new LinkedList<>();
     }
 
     private boolean transition(String symbol) {
@@ -162,104 +162,63 @@ public class Automaton {
         return true;
     }
 
-    private String process(String str) {
-        LinkedList<Integer> stateBuffer = new LinkedList<>(); //guarda o estado
-        String wordBuffer = ""; //guarda o token
-
-        for (int i = 0; i < str.length(); i++) {
-            Character cha = str.charAt(i);
-
-            if (transition(cha.toString())) {
-                stateBuffer.push(state);
-                if (state != 0 && state != 1) {
-                    wordBuffer += cha;
-                }
-            } else {
-                int count = 0;
-                while (classification.get(stateBuffer.peek()).equals("NF")) {
-                    stateBuffer.pop();
-                    count++;
-                    if (stateBuffer.isEmpty()) {
-                        System.out.println("Erro: Simbolo Não identificado");
-                        System.exit(1);
-                    }
-                }
-                String cla;
-                if (state == 2 && reserved.containsKey(wordBuffer.substring(0, wordBuffer.length() - count))) {
-                    cla = reserved.get(wordBuffer.substring(0, wordBuffer.length() - count));
-                } else {
-                    cla = classification.get(stateBuffer.peek());
-                }
-                tokenList.add(new Token(wordBuffer.substring(0, wordBuffer.length() - count), cla, line));
-                state = 0;
-                wordBuffer = process(wordBuffer.substring(wordBuffer.length() - count));
-            }
-        }
-        return wordBuffer;
-    }
-
-    public LinkedList<Token> parse(File file) {
-        FileReader fr = null;
+    public LinkedList<Token> parse(File file) throws UnknownSymbolException, commentNotClosedException {
+        LinkedList<Token> tokenList = new LinkedList<>();
+        FileReader fr;
+        BufferedReader br;
         try {
             fr = new FileReader(file);
-            BufferedReader br = new BufferedReader(fr);
+            br = new BufferedReader(fr);
 
-            LinkedList<Integer> stateBuffer = new LinkedList<>(); //guarda o estado
-            String wordBuffer = ""; //guarda o token
+            String wordBuffer = "";
 
             int c;
-
             while ((c = br.read()) != -1) {
                 Character cha = (char) c;
-
                 boolean acc = transition(cha.toString());
-                stateBuffer.push(state);
+
+                /*salva caracteres validos e.g caracteres que levam para fora do estado inicial
+                e que nao foram lidos durante o estado de comentario*/
                 if (state != 0 && state != 1) {
                     wordBuffer += cha;
                 }
 
-                if (!acc) {
-                    int count = 1;
-                    while (classification.get(stateBuffer.peek()).equals("NF")) {
-                        stateBuffer.pop();
-                        count++;
-                        if (stateBuffer.isEmpty()) {
-                            System.out.println("Erro: Simbolo nao identificado");
-                            System.exit(1);
-                        }
-                    }
-                    String cla;
-                    if (state == 2 && reserved.containsKey(wordBuffer.substring(0, wordBuffer.length() - count))) {
-                        cla = reserved.get(wordBuffer.substring(0, wordBuffer.length() - count));
-                    } else {
-                        cla = classification.get(stateBuffer.peek());
-                    }
-                    
-                    tokenList.add(new Token(wordBuffer.substring(0, wordBuffer.length() - count), cla, line));
-                    state = 0;
-                    stateBuffer.clear();
-                    
-                    wordBuffer = process(wordBuffer.substring(wordBuffer.length() - count));
-                }
+                //se foi encontrada uma transicao
+                if (acc) {
+                    lastSafeState = state;
+                    token = wordBuffer;
+                    br.mark(1000);
+                } //se a transicao nao foi encontrada durante o estado inicial
+                else if (lastSafeState == 0) {
+                    throw new UnknownSymbolException(line);
+                } //adicionando o ultimo token valido
+                else {
+                    String cla = (state == 2 && reserved.containsKey(token)) ? reserved.get(token) : classification.get(lastSafeState);
 
+                    tokenList.add(new Token(token, cla, line));
+                    br.reset();
+                    wordBuffer = "";
+                    state = 0;
+                    lastSafeState = 0;
+                }
             }
+
+            //se o ultimo estado valido foi o de comentario
+            if (lastSafeState == 1) {
+                throw new commentNotClosedException();
+            } //se o ultimo estado valido nao foi o inicial. Serve para pegar o ultimo token escrito
+            else if (lastSafeState != 0) {
+                String cla = (state == 2 && reserved.containsKey(token)) ? reserved.get(token) : classification.get(lastSafeState);
+                tokenList.add(new Token(token, cla, line));
+            }
+
             fr.close();
             br.close();
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(Automaton.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(Automaton.class.getName()).log(Level.SEVERE, null, ex);
+            System.err.println("Erro durante Parsing");
         }
 
-        //erro de comentário
-        if (state == 1) {
-            System.out.println("Erro: Comentário aberto e não fechado");
-            System.exit(1);
-        }
-        
         return tokenList;
-
     }
 
 }
-
