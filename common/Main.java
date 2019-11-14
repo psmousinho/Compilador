@@ -11,7 +11,7 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        File file = new File("C:\\Users\\Pablo Suria\\Documents\\Workspace\\compilador\\Arquivos de Teste\\test0");
+        File file = new File(args[0]);
         Automaton a = new Automaton();
 
         try {
