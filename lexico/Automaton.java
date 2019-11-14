@@ -261,13 +261,5 @@ public class Automaton {
 
     }
 
-    public static void main(String[] arg) {
-        File file = new File("//home//iot//Desktop//compilador//teste");
-        Automaton a = new Automaton();
-        LinkedList<Token> list = a.parse(file);
-        for(Token t : list) {
-            System.out.println(t);
-        }
-    }
 }
 
