@@ -9,14 +9,23 @@ public class Analyzer {
     private LinkedList<Token> tokens;
     private Token current_symbol;
 
+	/**
+     *  Construtor que recebe a lista de tokens separadas pelo léxico
+     */
     public Analyzer(LinkedList<Token> tokens) {
         this.tokens = tokens;
     }
 
+	/**
+     *  Método que relizada a remoção(e retorno) do primeiro tokens da lista. 
+     */
     private void getNextSym() {
         this.current_symbol = tokens.removeFirst();
     }
 
+	/**
+     * Adiciona de novo a cabeça da lista o símbolo atual
+     */
     private void returnPrevSym() {
         tokens.addFirst(current_symbol);
     }
@@ -26,6 +35,10 @@ public class Analyzer {
         programa();
     }
 
+	/**
+     * Método que, de fato, faz a implentação da análise sintática
+     * @throws MismatchSymbolException 
+     */
     private void programa() throws MismatchSymbolException {
         if (current_symbol.getValue().equals("program")) {
             getNextSym();
@@ -38,6 +51,11 @@ public class Analyzer {
                     declaracoes_subprogramas();
                     getNextSym();
                     comando_composto();
+					if(current_symbol.getValue().equals("\\.")){
+                            System.out.println("Sintatic done");
+                        }else{
+                           throw new MismatchSymbolException("Esperando Delimitador \'.\' na linha " + current_symbol.getLine()+ " antes de " + current_symbol.getValue());
+                    }
                 } else {
                     throw new MismatchSymbolException("Esperando ; na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
                 }
@@ -120,7 +138,7 @@ public class Analyzer {
     }
 
     private void tipo() throws MismatchSymbolException {
-        if (!(current_symbol.getValue().equals("integer")
+        if (!(current_symbol.getValue().equals("integer") //se o símbolo atual não for "integer,real ou boolean", então:
                 || current_symbol.getValue().equals("real")
                 || current_symbol.getValue().equals("boolean"))) {
             throw new MismatchSymbolException("Esperando Tipo na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
@@ -192,7 +210,7 @@ public class Analyzer {
             getNextSym();
             comandos_opcionais();
             getNextSym();
-            if (!current_symbol.getValue().equals("end")) {
+            if (!current_symbol.getValue().equals("end")) { // se o comando não for o end
                 throw new MismatchSymbolException("Esperando end na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
             }
         } else {
@@ -222,19 +240,52 @@ public class Analyzer {
         }
     }
 
-    /* private void comando() throws MismatchSymbolException {
-        if(current_symbol.getValue().equals("while")) {
-            
-        } else if(current_symbol.getValue().equals("if")) {
-            
-        } else if(current_symbol.getClassification().equals("Identificador")) {
-            getNextSym();
-            if()
-        }
-        else {
-            comando_composto();
-        }
-    }*/
+    //revisar
+     private void comando() throws MismatchSymbolException{
+         variavel();
+         getNextSym();
+         if(current_symbol.getValue().equals(":")){
+             getNextSym();
+             if(current_symbol.getValue().equals("=")){
+             }else{
+                 throw new MismatchSymbolException("Esperando = na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
+             }          
+         }else{
+             throw new MismatchSymbolException("Esperando : na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
+         }
+         
+         ativacao_procedimento();
+         comando_composto();
+         if(current_symbol.getValue().equals("if")){
+             getNextSym();
+             expressao();
+             getNextSym();
+             if(current_symbol.getValue().equals("then")){
+                 getNextSym();
+                 comando();
+                 parte_else();
+             }else{
+                 throw new MismatchSymbolException("Esperando 'then' na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
+             }
+         }else{
+             throw new MismatchSymbolException("Esperando 'if' na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
+         }
+         
+         if(current_symbol.getValue().equals("while")){
+             getNextSym();
+             expressao();
+             getNextSym();
+             if(current_symbol.getValue().equals("do")){
+                 getNextSym();
+                 comando();
+             }else{
+                 throw new MismatchSymbolException("Esperando 'do' na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
+             }
+         }else{
+             throw new MismatchSymbolException("Esperando 'while' na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
+         }
+                     
+     }
     
     private void parte_else() throws MismatchSymbolException {
         if (current_symbol.getValue().equals("else")) {

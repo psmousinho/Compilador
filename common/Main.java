@@ -29,7 +29,7 @@ public class Main {
             Analyzer sintatic = new Analyzer(list);
             sintatic.analyze();
             
-            System.out.println("Sintatic done");
+            //System.out.println("Sintatic done");
         } catch (UnknownSymbolException | CommentNotClosedException | MismatchSymbolException ex) {
             ex.printStackTrace();
         }
