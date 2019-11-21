@@ -2,15 +2,18 @@ package syntactic;
 
 import common.Token;
 import java.util.LinkedList;
+import syntactic.exceptions.EmptyOptionException;
 import syntactic.exceptions.MismatchSymbolException;
 
 public class Analyzer {
 
-    private LinkedList<Token> tokens;
+    private final LinkedList<Token> tokens;
     private Token current_symbol;
 
     /**
      * Construtor que recebe a lista de tokens separadas pelo léxico
+     *
+     * @param tokens
      */
     public Analyzer(LinkedList<Token> tokens) {
         this.tokens = tokens;
@@ -97,25 +100,24 @@ public class Analyzer {
     }
 
     private void lista_declaracoes_variaveis2() throws MismatchSymbolException {
-        try {
+        if (current_symbol.getClassification().equals("Identificador")) {
             lista_identificadores();
-        } catch (MismatchSymbolException ex) {
-            returnPrevSym();
-            return;
-        }
-        getNextSym();
-        if (current_symbol.getValue().equals(":")) {
             getNextSym();
-            tipo();
-            getNextSym();
-            if (current_symbol.getValue().equals(";")) {
+            if (current_symbol.getValue().equals(":")) {
                 getNextSym();
-                lista_declaracoes_variaveis2();
+                tipo();
+                getNextSym();
+                if (current_symbol.getValue().equals(";")) {
+                    getNextSym();
+                    lista_declaracoes_variaveis2();
+                } else {
+                    throw new MismatchSymbolException("Esperando ; na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
+                }
             } else {
-                throw new MismatchSymbolException("Esperando ; na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
+                throw new MismatchSymbolException("Esperando : na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
             }
         } else {
-            throw new MismatchSymbolException("Esperando : na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
+            returnPrevSym();
         }
     }
 
@@ -151,16 +153,16 @@ public class Analyzer {
     }
 
     private void declaracoes_subprogramas() throws MismatchSymbolException {
-        try {
+        if (current_symbol.getValue().equals("procedure")) {
             declaracao_subprograma();
             getNextSym();
-            if(current_symbol.getValue().equals(";")) {
+            if (current_symbol.getValue().equals(";")) {
                 getNextSym();
                 declaracoes_subprogramas();
             } else {
                 returnPrevSym();
             }
-        } catch (MismatchSymbolException ex) {
+        } else {
             returnPrevSym();
         }
     }
@@ -186,7 +188,7 @@ public class Analyzer {
                 throw new MismatchSymbolException("Esperando Identificador na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
             }
         } else {
-            throw new MismatchSymbolException("Esperando palavra reservada Procedure na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
+            throw new MismatchSymbolException("Esperando procedure na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
         }
     }
 
@@ -238,21 +240,22 @@ public class Analyzer {
         }
     }
 
+    //concertar
     private void comandos_opcionais() throws MismatchSymbolException {
         try {
             lista_comandos();
-        } catch (MismatchSymbolException ex) {
+        } catch (EmptyOptionException ex) {
             returnPrevSym();
         }
     }
 
-    private void lista_comandos() throws MismatchSymbolException {
+    private void lista_comandos() throws MismatchSymbolException, EmptyOptionException {
         comando();
         getNextSym();
         lista_comandos2();
     }
 
-    private void lista_comandos2() throws MismatchSymbolException {
+    private void lista_comandos2() throws MismatchSymbolException, EmptyOptionException {
         if (current_symbol.getValue().equals(";")) {
             getNextSym();
             lista_comandos();
@@ -261,8 +264,7 @@ public class Analyzer {
         }
     }
 
-    //revisado por pablo
-    private void comando() throws MismatchSymbolException {
+    private void comando() throws MismatchSymbolException, EmptyOptionException {
         if (current_symbol.getClassification().equals("Identificador")) {
             ativacao_procedimento();
         } else if (current_symbol.getValue().equals("begin")) {
@@ -290,12 +292,11 @@ public class Analyzer {
                 throw new MismatchSymbolException("Esperando 'do' na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
             }
         } else {
-            throw new MismatchSymbolException("Esperando COMANDO na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
+            throw new EmptyOptionException();
         }
-
     }
 
-    private void parte_else() throws MismatchSymbolException {
+    private void parte_else() throws MismatchSymbolException, EmptyOptionException {
         if (current_symbol.getValue().equals("else")) {
             getNextSym();
             comando();
@@ -359,14 +360,12 @@ public class Analyzer {
     }
 
     private void expressao_apx() throws MismatchSymbolException {
-        try {
-            op_relacional();
-        } catch (MismatchSymbolException ex) {
+        if (op_relacional()) {
+            getNextSym();
+            expressao_simples();
+        } else {
             returnPrevSym();
-            return;
         }
-        getNextSym();
-        expressao_simples();
     }
 
     private void expressao_simples() throws MismatchSymbolException {
@@ -379,16 +378,14 @@ public class Analyzer {
     }
 
     private void expressao_simples2() throws MismatchSymbolException {
-        try {
-            op_aditivo();
-        } catch (MismatchSymbolException ex) {
+        if (op_aditivo()) {
+            getNextSym();
+            termo();
+            getNextSym();
+            expressao_simples2();
+        } else {
             returnPrevSym();
-            return;
         }
-        getNextSym();
-        termo();
-        getNextSym();
-        expressao_simples2();
     }
 
     private void termo() throws MismatchSymbolException {
@@ -398,16 +395,14 @@ public class Analyzer {
     }
 
     private void termo2() throws MismatchSymbolException {
-        try {
-            op_multiplicativo();
-        } catch (MismatchSymbolException ex) {
+        if (op_multiplicativo()) {
+            getNextSym();
+            fator();
+            getNextSym();
+            termo2();
+        } else {
             returnPrevSym();
-            return;
         }
-        getNextSym();
-        fator();
-        getNextSym();
-        termo2();
     }
 
     private void fator() throws MismatchSymbolException {
@@ -445,22 +440,16 @@ public class Analyzer {
         return current_symbol.getValue().equals("+") || current_symbol.getValue().equals("-");
     }
 
-    private void op_relacional() throws MismatchSymbolException {
-        if (!current_symbol.getClassification().equals("Operador Relacional")) {
-            throw new MismatchSymbolException("Esperando Operador Relacional na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
-        }
+    private boolean op_relacional() throws MismatchSymbolException {
+        return current_symbol.getClassification().equals("Operador Relacional");
     }
 
-    private void op_aditivo() throws MismatchSymbolException {
-        if (!current_symbol.getClassification().equals("Operador Aditivo")) {
-            throw new MismatchSymbolException("Esperando Operador Aditivo na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
-        }
+    private boolean op_aditivo() throws MismatchSymbolException {
+        return current_symbol.getClassification().equals("Operador Aditivo");
     }
 
-    private void op_multiplicativo() throws MismatchSymbolException {
-        if (!current_symbol.getClassification().equals("Operador Multiplicativo")) {
-            throw new MismatchSymbolException("Esperando Operador Multiplicativo na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
-        }
+    private boolean op_multiplicativo() {
+        return current_symbol.getClassification().equals("Operador Multiplicativo");
     }
 
 }

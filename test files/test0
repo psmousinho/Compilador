@@ -1,16 +1,25 @@
-program resultado;
-	var N1,N2,N3 : real;
-		S,M  : real;
-	      result : boolean;
+program teste; {adasda}
+	var
+    		valor1:integer;
+    		valor2:real;
+
+	procedure proc1(qqq:integer);
+		var
+			valor3:integer;
+		begin
+			valor3:=qqq;
+		end;
+	
+	procedure proc2(aaa:real;qqq:integer);
+		var
+			valor4:real;
+		begin
+			valor4:= aaa+qqq;
+		end
+
+
+
 	begin
-		N1:=7.5;
-		N2:=5.5;
-		N3:=4.5;
-		S:=N1+N2+N3;
-		M:=S/3;
-		if(M<>5) then
-			result:=true
-		else
-			result:=false;
+    	valor1 := 4 + valor2;
 	end.
 
