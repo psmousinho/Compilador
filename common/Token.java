@@ -1,7 +1,5 @@
 package common;
 
-
-
 public class Token {
 
     private final String value;
@@ -27,9 +25,6 @@ public class Token {
     }
 
     public String toString() {
-
         return value + " | " + classification + " | " + line;
-
     }
 }
-

@@ -1,11 +1,11 @@
 
 package common;
 
-import lexical.exceptions.UnknownSymbolException;
-import lexical.exceptions.CommentNotClosedException;
-import java.util.LinkedList;
 import java.io.File;
-import lexical.Automaton;
+import java.util.LinkedList;
+import lexico.Automaton;
+import lexico.exceptions.CommentNotClosedException;
+import lexico.exceptions.UnknownSymbolException;
 import syntactic.Analyzer;
 import syntactic.exceptions.MismatchSymbolException;
 
@@ -18,7 +18,7 @@ public class Main {
         
 
         try {
-            File file = new File(args[0]);
+            File file = new File("C:\\Users\\Pablo Suria\\Documents\\Java\\NetBeans\\compilador\\src\\test files\\test0");
             
             Automaton a = new Automaton();
             LinkedList<Token> list = a.parse(file);
@@ -29,7 +29,6 @@ public class Main {
             Analyzer sintatic = new Analyzer(list);
             sintatic.analyze();
             
-            //System.out.println("Sintatic done");
         } catch (UnknownSymbolException | CommentNotClosedException | MismatchSymbolException ex) {
             ex.printStackTrace();
         }

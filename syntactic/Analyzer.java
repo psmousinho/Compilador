@@ -9,21 +9,21 @@ public class Analyzer {
     private LinkedList<Token> tokens;
     private Token current_symbol;
 
-	/**
-     *  Construtor que recebe a lista de tokens separadas pelo léxico
+    /**
+     * Construtor que recebe a lista de tokens separadas pelo léxico
      */
     public Analyzer(LinkedList<Token> tokens) {
         this.tokens = tokens;
     }
 
-	/**
-     *  Método que relizada a remoção(e retorno) do primeiro tokens da lista. 
+    /**
+     * Método que relizada a remoção(e retorno) do primeiro tokens da lista.
      */
     private void getNextSym() {
         this.current_symbol = tokens.removeFirst();
     }
 
-	/**
+    /**
      * Adiciona de novo a cabeça da lista o símbolo atual
      */
     private void returnPrevSym() {
@@ -35,9 +35,10 @@ public class Analyzer {
         programa();
     }
 
-	/**
+    /**
      * Método que, de fato, faz a implentação da análise sintática
-     * @throws MismatchSymbolException 
+     *
+     * @throws MismatchSymbolException
      */
     private void programa() throws MismatchSymbolException {
         if (current_symbol.getValue().equals("program")) {
@@ -51,10 +52,11 @@ public class Analyzer {
                     declaracoes_subprogramas();
                     getNextSym();
                     comando_composto();
-					if(current_symbol.getValue().equals("\\.")){
-                            System.out.println("Sintatic done");
-                        }else{
-                           throw new MismatchSymbolException("Esperando Delimitador \'.\' na linha " + current_symbol.getLine()+ " antes de " + current_symbol.getValue());
+                    getNextSym();
+                    if (current_symbol.getValue().equals(".")) {
+                        System.out.println("******Sintatic done******");
+                    } else {
+                        throw new MismatchSymbolException("Esperando Delimitador \'.\' na linha " + current_symbol.getLine() + " antes de " + current_symbol.getValue());
                     }
                 } else {
                     throw new MismatchSymbolException("Esperando ; na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
@@ -82,6 +84,7 @@ public class Analyzer {
         if (current_symbol.getValue().equals(":")) {
             getNextSym();
             tipo();
+            getNextSym();
             if (current_symbol.getValue().equals(";")) {
                 getNextSym();
                 lista_declaracoes_variaveis2();
@@ -100,9 +103,11 @@ public class Analyzer {
             returnPrevSym();
             return;
         }
+        getNextSym();
         if (current_symbol.getValue().equals(":")) {
             getNextSym();
             tipo();
+            getNextSym();
             if (current_symbol.getValue().equals(";")) {
                 getNextSym();
                 lista_declaracoes_variaveis2();
@@ -234,59 +239,47 @@ public class Analyzer {
 
     private void lista_comandos2() throws MismatchSymbolException {
         if (current_symbol.getValue().equals(";")) {
+            getNextSym();
             lista_comandos();
         } else {
             returnPrevSym();
         }
     }
 
-    //revisar
-     private void comando() throws MismatchSymbolException{
-         variavel();
-         getNextSym();
-         if(current_symbol.getValue().equals(":")){
-             getNextSym();
-             if(current_symbol.getValue().equals("=")){
-             }else{
-                 throw new MismatchSymbolException("Esperando = na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
-             }          
-         }else{
-             throw new MismatchSymbolException("Esperando : na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
-         }
-         
-         ativacao_procedimento();
-         comando_composto();
-         if(current_symbol.getValue().equals("if")){
-             getNextSym();
-             expressao();
-             getNextSym();
-             if(current_symbol.getValue().equals("then")){
-                 getNextSym();
-                 comando();
-                 parte_else();
-             }else{
-                 throw new MismatchSymbolException("Esperando 'then' na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
-             }
-         }else{
-             throw new MismatchSymbolException("Esperando 'if' na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
-         }
-         
-         if(current_symbol.getValue().equals("while")){
-             getNextSym();
-             expressao();
-             getNextSym();
-             if(current_symbol.getValue().equals("do")){
-                 getNextSym();
-                 comando();
-             }else{
-                 throw new MismatchSymbolException("Esperando 'do' na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
-             }
-         }else{
-             throw new MismatchSymbolException("Esperando 'while' na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
-         }
-                     
-     }
-    
+    //revisado por pablo
+    private void comando() throws MismatchSymbolException {
+        if (current_symbol.getClassification().equals("Identificador")) {
+            ativacao_procedimento();
+        } else if (current_symbol.getValue().equals("begin")) {
+            comando_composto();
+        } else if (current_symbol.getValue().equals("if")) {
+            getNextSym();
+            expressao();
+            getNextSym();
+            if (current_symbol.getValue().equals("then")) {
+                getNextSym();
+                comando();
+                getNextSym();
+                parte_else();
+            } else {
+                throw new MismatchSymbolException("Esperando palavra then na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
+            }
+        } else if (current_symbol.getValue().equals("while")) {
+            getNextSym();
+            expressao();
+            getNextSym();
+            if (current_symbol.getValue().equals("do")) {
+                getNextSym();
+                comando();
+            } else {
+                throw new MismatchSymbolException("Esperando 'do' na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
+            }
+        } else {
+            throw new MismatchSymbolException("Esperando COMANDO na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
+        }
+
+    }
+
     private void parte_else() throws MismatchSymbolException {
         if (current_symbol.getValue().equals("else")) {
             getNextSym();
@@ -321,6 +314,9 @@ public class Analyzer {
                 throw new MismatchSymbolException("Esperando ) na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
 
             }
+        } else if (current_symbol.getValue().equals(":=")) {
+            getNextSym();
+            expressao();
         } else {
             returnPrevSym();
         }
