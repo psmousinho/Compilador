@@ -365,7 +365,7 @@ public class Analyzer {
             returnPrevSym();
             return;
         }
-
+        getNextSym();
         expressao_simples();
     }
 
@@ -404,6 +404,7 @@ public class Analyzer {
             returnPrevSym();
             return;
         }
+        getNextSym();
         fator();
         getNextSym();
         termo2();
