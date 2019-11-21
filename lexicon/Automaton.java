@@ -1,4 +1,4 @@
-package lexico;
+package lexicon;
 
 import common.Token;
 import java.io.BufferedReader;
@@ -7,7 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
-import lexico.exceptions.*;
+import lexicon.exceptions.*;
 
 public class Automaton {
 
@@ -143,6 +143,7 @@ public class Automaton {
                 } else {
                     return false;
                 }
+                break;
             //relacional >
             case 9:
                 if (symbol.matches("=")) {
@@ -150,6 +151,7 @@ public class Automaton {
                 } else {
                     return false;
                 }
+                break;
             //realcional =|<>|<=|>=
             case 10:
                 return false;
