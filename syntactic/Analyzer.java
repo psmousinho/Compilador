@@ -153,6 +153,13 @@ public class Analyzer {
     private void declaracoes_subprogramas() throws MismatchSymbolException {
         try {
             declaracao_subprograma();
+            getNextSym();
+            if(current_symbol.getValue().equals(";")) {
+                getNextSym();
+                declaracoes_subprogramas();
+            } else {
+                returnPrevSym();
+            }
         } catch (MismatchSymbolException ex) {
             returnPrevSym();
         }
@@ -161,15 +168,20 @@ public class Analyzer {
     private void declaracao_subprograma() throws MismatchSymbolException {
         if (current_symbol.getValue().equals("procedure")) {
             getNextSym();
-            if (current_symbol.getClassification().equals("Identificacao")) {
+            if (current_symbol.getClassification().equals("Identificador")) {
                 getNextSym();
                 argumentos();
                 getNextSym();
-                declaracoes_variaveis();
-                getNextSym();
-                declaracoes_subprogramas();
-                getNextSym();
-                comando_composto();
+                if (current_symbol.getValue().equals(";")) {
+                    getNextSym();
+                    declaracoes_variaveis();
+                    getNextSym();
+                    declaracoes_subprogramas();
+                    getNextSym();
+                    comando_composto();
+                } else {
+                    throw new MismatchSymbolException("Esperando ; na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
+                }
             } else {
                 throw new MismatchSymbolException("Esperando Identificador na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
             }
@@ -182,6 +194,7 @@ public class Analyzer {
         if (current_symbol.getValue().equals("(")) {
             getNextSym();
             lista_parametros();
+            getNextSym();
             if (!current_symbol.getValue().equals(")")) {
                 throw new MismatchSymbolException("Esperando \")\"  na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
             }
@@ -192,6 +205,7 @@ public class Analyzer {
 
     private void lista_parametros() throws MismatchSymbolException {
         lista_identificadores();
+        getNextSym();
         if (current_symbol.getValue().equals(":")) {
             getNextSym();
             tipo();
@@ -204,6 +218,7 @@ public class Analyzer {
 
     private void lista_parametros2() throws MismatchSymbolException {
         if (current_symbol.getValue().equals(";")) {
+            getNextSym();
             lista_parametros();
         } else {
             returnPrevSym();
@@ -370,6 +385,7 @@ public class Analyzer {
             returnPrevSym();
             return;
         }
+        getNextSym();
         termo();
         getNextSym();
         expressao_simples2();
