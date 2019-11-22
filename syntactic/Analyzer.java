@@ -23,7 +23,11 @@ public class Analyzer {
      * Método que relizada a remoção(e retorno) do primeiro tokens da lista.
      */
     private void getNextSym() {
-        this.current_symbol = tokens.removeFirst();
+        if(!tokens.isEmpty()) {
+            this.current_symbol = tokens.removeFirst();
+        } else {
+            this.current_symbol = new Token("", "", 0);
+        }
     }
 
     /**
