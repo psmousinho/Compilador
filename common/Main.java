@@ -3,10 +3,7 @@ package common;
 import java.io.File;
 import java.util.LinkedList;
 import lexicon.Automaton;
-import lexicon.exceptions.CommentNotClosedException;
-import lexicon.exceptions.UnknownSymbolException;
 import syntactic.Analyzer;
-import syntactic.exceptions.MismatchSymbolException;
 
 public class Main {
 
@@ -27,7 +24,7 @@ public class Main {
             Analyzer sintatic = new Analyzer(list);
             sintatic.analyze();
 
-        } catch (UnknownSymbolException | CommentNotClosedException | MismatchSymbolException ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
 

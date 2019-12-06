@@ -1,5 +1,10 @@
 package syntactic;
 
+import Semantic.SymbolTable;
+import Semantic.TypeCheckingTable;
+import Semantic.exceptions.DuplicateIdentifierException;
+import Semantic.exceptions.InvalidOperandsException;
+import Semantic.exceptions.UnidentifiedSymbolException;
 import common.Token;
 import java.util.LinkedList;
 import syntactic.exceptions.EmptyOptionException;
@@ -8,6 +13,8 @@ import syntactic.exceptions.MismatchSymbolException;
 public class Analyzer {
 
     private final LinkedList<Token> tokens;
+    private final SymbolTable st;
+    private final TypeCheckingTable tcp;
     private Token current_symbol;
 
     /**
@@ -17,13 +24,15 @@ public class Analyzer {
      */
     public Analyzer(LinkedList<Token> tokens) {
         this.tokens = tokens;
+        st = new SymbolTable();
+        tcp = new TypeCheckingTable();
     }
 
     /**
      * Método que relizada a remoção(e retorno) do primeiro tokens da lista.
      */
     private void getNextSym() {
-        if(!tokens.isEmpty()) {
+        if (!tokens.isEmpty()) {
             this.current_symbol = tokens.removeFirst();
         } else {
             this.current_symbol = new Token("", "", 0);
@@ -37,7 +46,7 @@ public class Analyzer {
         tokens.addFirst(current_symbol);
     }
 
-    public void analyze() throws MismatchSymbolException {
+    public void analyze() throws MismatchSymbolException, DuplicateIdentifierException, UnidentifiedSymbolException, InvalidOperandsException {
         getNextSym();
         programa();
     }
@@ -47,10 +56,13 @@ public class Analyzer {
      *
      * @throws MismatchSymbolException
      */
-    private void programa() throws MismatchSymbolException {
+    private void programa() throws MismatchSymbolException, DuplicateIdentifierException, UnidentifiedSymbolException, InvalidOperandsException {
         if (current_symbol.getValue().equals("program")) {
             getNextSym();
+            st.addMark();
+            tcp.openScope();
             if (current_symbol.getClassification().equals("Identificador")) {
+                st.addSymbol(current_symbol);
                 getNextSym();
                 if (current_symbol.getValue().equals(";")) {
                     getNextSym();
@@ -76,7 +88,7 @@ public class Analyzer {
         }
     }
 
-    private void declaracoes_variaveis() throws MismatchSymbolException {
+    private void declaracoes_variaveis() throws MismatchSymbolException, DuplicateIdentifierException {
         if (current_symbol.getValue().equals("var")) {
             getNextSym();
             lista_declaracoes_variaveis();
@@ -85,7 +97,7 @@ public class Analyzer {
         }
     }
 
-    private void lista_declaracoes_variaveis() throws MismatchSymbolException {
+    private void lista_declaracoes_variaveis() throws MismatchSymbolException, DuplicateIdentifierException {
         lista_identificadores();
         getNextSym();
         if (current_symbol.getValue().equals(":")) {
@@ -103,7 +115,7 @@ public class Analyzer {
         }
     }
 
-    private void lista_declaracoes_variaveis2() throws MismatchSymbolException {
+    private void lista_declaracoes_variaveis2() throws MismatchSymbolException, DuplicateIdentifierException {
         if (current_symbol.getClassification().equals("Identificador")) {
             lista_identificadores();
             getNextSym();
@@ -125,8 +137,10 @@ public class Analyzer {
         }
     }
 
-    private void lista_identificadores() throws MismatchSymbolException {
+    private void lista_identificadores() throws MismatchSymbolException, DuplicateIdentifierException {
         if (current_symbol.getClassification().equals("Identificador")) {
+            st.addSymbol(current_symbol);
+            tcp.addToBuffer(current_symbol);
             getNextSym();
             lista_identificadores2();
         } else {
@@ -134,10 +148,12 @@ public class Analyzer {
         }
     }
 
-    private void lista_identificadores2() throws MismatchSymbolException {
+    private void lista_identificadores2() throws MismatchSymbolException, DuplicateIdentifierException {
         if (current_symbol.getValue().equals(",")) {
             getNextSym();
             if (current_symbol.getClassification().equals("Identificador")) {
+                st.addSymbol(current_symbol);
+                tcp.addToBuffer(current_symbol);
                 getNextSym();
                 lista_identificadores2();
             } else {
@@ -153,10 +169,12 @@ public class Analyzer {
                 || current_symbol.getValue().equals("real")
                 || current_symbol.getValue().equals("boolean"))) {
             throw new MismatchSymbolException("Esperando Tipo na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
+        } else {
+            tcp.defineBufferType(current_symbol.getValue());
         }
     }
 
-    private void declaracoes_subprogramas() throws MismatchSymbolException {
+    private void declaracoes_subprogramas() throws MismatchSymbolException, DuplicateIdentifierException, UnidentifiedSymbolException, InvalidOperandsException {
         if (current_symbol.getValue().equals("procedure")) {
             declaracao_subprograma();
             getNextSym();
@@ -171,10 +189,13 @@ public class Analyzer {
         }
     }
 
-    private void declaracao_subprograma() throws MismatchSymbolException {
+    private void declaracao_subprograma() throws MismatchSymbolException, DuplicateIdentifierException, UnidentifiedSymbolException, InvalidOperandsException {
         if (current_symbol.getValue().equals("procedure")) {
             getNextSym();
             if (current_symbol.getClassification().equals("Identificador")) {
+                st.addSymbol(current_symbol);
+                st.addMark();
+                tcp.openScope();
                 getNextSym();
                 argumentos();
                 getNextSym();
@@ -185,6 +206,8 @@ public class Analyzer {
                     declaracoes_subprogramas();
                     getNextSym();
                     comando_composto();
+                    st.removeLastScope();
+                    tcp.removeScope();
                 } else {
                     throw new MismatchSymbolException("Esperando ; na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
                 }
@@ -196,7 +219,7 @@ public class Analyzer {
         }
     }
 
-    private void argumentos() throws MismatchSymbolException {
+    private void argumentos() throws MismatchSymbolException, DuplicateIdentifierException {
         if (current_symbol.getValue().equals("(")) {
             getNextSym();
             lista_parametros();
@@ -209,7 +232,7 @@ public class Analyzer {
         }
     }
 
-    private void lista_parametros() throws MismatchSymbolException {
+    private void lista_parametros() throws MismatchSymbolException, DuplicateIdentifierException {
         lista_identificadores();
         getNextSym();
         if (current_symbol.getValue().equals(":")) {
@@ -222,7 +245,7 @@ public class Analyzer {
         }
     }
 
-    private void lista_parametros2() throws MismatchSymbolException {
+    private void lista_parametros2() throws MismatchSymbolException, DuplicateIdentifierException {
         if (current_symbol.getValue().equals(";")) {
             getNextSym();
             lista_parametros();
@@ -231,7 +254,7 @@ public class Analyzer {
         }
     }
 
-    private void comando_composto() throws MismatchSymbolException {
+    private void comando_composto() throws MismatchSymbolException, UnidentifiedSymbolException, InvalidOperandsException {
         if (current_symbol.getValue().equals("begin")) {
             getNextSym();
             comandos_opcionais();
@@ -244,8 +267,7 @@ public class Analyzer {
         }
     }
 
-    //concertar
-    private void comandos_opcionais() throws MismatchSymbolException {
+    private void comandos_opcionais() throws MismatchSymbolException, UnidentifiedSymbolException, InvalidOperandsException {
         try {
             lista_comandos();
         } catch (EmptyOptionException ex) {
@@ -253,13 +275,13 @@ public class Analyzer {
         }
     }
 
-    private void lista_comandos() throws MismatchSymbolException, EmptyOptionException {
+    private void lista_comandos() throws MismatchSymbolException, EmptyOptionException, UnidentifiedSymbolException, InvalidOperandsException {
         comando();
         getNextSym();
         lista_comandos2();
     }
 
-    private void lista_comandos2() throws MismatchSymbolException, EmptyOptionException {
+    private void lista_comandos2() throws MismatchSymbolException, EmptyOptionException, UnidentifiedSymbolException, InvalidOperandsException {
         if (current_symbol.getValue().equals(";")) {
             getNextSym();
             lista_comandos();
@@ -268,7 +290,7 @@ public class Analyzer {
         }
     }
 
-    private void comando() throws MismatchSymbolException, EmptyOptionException {
+    private void comando() throws MismatchSymbolException, EmptyOptionException, UnidentifiedSymbolException, InvalidOperandsException {
         if (current_symbol.getClassification().equals("Identificador")) {
             ativacao_procedimento();
         } else if (current_symbol.getValue().equals("begin")) {
@@ -300,7 +322,7 @@ public class Analyzer {
         }
     }
 
-    private void parte_else() throws MismatchSymbolException, EmptyOptionException {
+    private void parte_else() throws MismatchSymbolException, EmptyOptionException, UnidentifiedSymbolException, InvalidOperandsException {
         if (current_symbol.getValue().equals("else")) {
             getNextSym();
             comando();
@@ -315,17 +337,19 @@ public class Analyzer {
         }
     }
 
-    private void ativacao_procedimento() throws MismatchSymbolException {
+    private void ativacao_procedimento() throws MismatchSymbolException, UnidentifiedSymbolException, InvalidOperandsException {
         if (current_symbol.getClassification().equals("Identificador")) {
+            st.containsSymbol(current_symbol);
+            Token aux = current_symbol;
             getNextSym();
-            ativacao_procedimento_apx();
+            ativacao_procedimento_apx(aux);
         } else {
             throw new MismatchSymbolException("Esperando Identificador na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
 
         }
     }
 
-    private void ativacao_procedimento_apx() throws MismatchSymbolException {
+    private void ativacao_procedimento_apx(Token aux) throws MismatchSymbolException, UnidentifiedSymbolException, InvalidOperandsException {
         if (current_symbol.getValue().equals("(")) {
             getNextSym();
             lista_expressoes();
@@ -335,20 +359,22 @@ public class Analyzer {
 
             }
         } else if (current_symbol.getValue().equals(":=")) {
+            tcp.pushId(aux);
             getNextSym();
             expressao();
+            tcp.executeOp("Atribuicao",current_symbol.getLine());
         } else {
             returnPrevSym();
         }
     }
 
-    private void lista_expressoes() throws MismatchSymbolException {
+    private void lista_expressoes() throws MismatchSymbolException, UnidentifiedSymbolException, InvalidOperandsException {
         expressao();
         getNextSym();
         lista_expressoes2();
     }
 
-    private void lista_expressoes2() throws MismatchSymbolException {
+    private void lista_expressoes2() throws MismatchSymbolException, UnidentifiedSymbolException, InvalidOperandsException {
         if (current_symbol.getValue().equals(",")) {
             getNextSym();
             lista_expressoes();
@@ -357,22 +383,23 @@ public class Analyzer {
         }
     }
 
-    private void expressao() throws MismatchSymbolException {
+    private void expressao() throws MismatchSymbolException, UnidentifiedSymbolException, InvalidOperandsException {
         expressao_simples();
         getNextSym();
         expressao_apx();
     }
 
-    private void expressao_apx() throws MismatchSymbolException {
+    private void expressao_apx() throws MismatchSymbolException, UnidentifiedSymbolException, InvalidOperandsException {
         if (op_relacional()) {
             getNextSym();
             expressao_simples();
+            tcp.executeOp("Operador Relacional",current_symbol.getLine());
         } else {
             returnPrevSym();
         }
     }
 
-    private void expressao_simples() throws MismatchSymbolException {
+    private void expressao_simples() throws MismatchSymbolException, UnidentifiedSymbolException, InvalidOperandsException {
         if (sinal()) {
             getNextSym();
         }
@@ -381,10 +408,11 @@ public class Analyzer {
         expressao_simples2();
     }
 
-    private void expressao_simples2() throws MismatchSymbolException {
+    private void expressao_simples2() throws MismatchSymbolException, UnidentifiedSymbolException, InvalidOperandsException {
         if (op_aditivo()) {
             getNextSym();
             termo();
+            tcp.executeOp("Operador Aditivo",current_symbol.getLine());
             getNextSym();
             expressao_simples2();
         } else {
@@ -392,16 +420,17 @@ public class Analyzer {
         }
     }
 
-    private void termo() throws MismatchSymbolException {
+    private void termo() throws MismatchSymbolException, UnidentifiedSymbolException, InvalidOperandsException {
         fator();
         getNextSym();
         termo2();
     }
 
-    private void termo2() throws MismatchSymbolException {
+    private void termo2() throws MismatchSymbolException, UnidentifiedSymbolException, InvalidOperandsException {
         if (op_multiplicativo()) {
             getNextSym();
             fator();
+            tcp.executeOp("Operador Multiplicativo",current_symbol.getLine());
             getNextSym();
             termo2();
         } else {
@@ -409,8 +438,10 @@ public class Analyzer {
         }
     }
 
-    private void fator() throws MismatchSymbolException {
+    private void fator() throws MismatchSymbolException, UnidentifiedSymbolException, InvalidOperandsException {
         if (current_symbol.getClassification().equals("Identificador")) {
+            st.containsSymbol(current_symbol);
+            Token aux = current_symbol;
             getNextSym();
             if (current_symbol.getValue().equals("(")) {
                 lista_expressoes();
@@ -419,12 +450,17 @@ public class Analyzer {
                 }
             } else {
                 returnPrevSym();
+                tcp.pushId(aux);
             }
-        } else if (current_symbol.getClassification().equals("Numero Inteiro")
-                || current_symbol.getClassification().equals("Numero Real")
-                || current_symbol.getValue().equals("true")
-                || current_symbol.getValue().equals("false")) {
-
+        } else if (current_symbol.getClassification().equals("integer")) {
+            tcp.pushType("integer");
+            
+        } else if (current_symbol.getClassification().equals("real")) {
+            tcp.pushType("real");
+            
+        } else if (current_symbol.getClassification().equals("true") || (current_symbol.getValue().equals("false"))) {
+            tcp.pushType("boolean");
+            
         } else if (current_symbol.getValue().equals("(")) {
             getNextSym();
             expressao();

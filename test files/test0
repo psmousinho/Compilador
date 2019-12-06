@@ -5,9 +5,10 @@ program teste; {adasda}
 
 	procedure proc1(qqq:integer);
 		var
-			valor3:integer;
+			va1:integer;
+			va2:real;
 		begin
-			valor3:=qqq;
+			va2:= 3.9;
 		end;
 	
 	procedure proc2(aaa:real;qqq:integer);
@@ -20,6 +21,6 @@ program teste; {adasda}
 
 
 	begin
-    	valor1 := 4 + valor2;
+            valor1 := valor2;
 	end.
 

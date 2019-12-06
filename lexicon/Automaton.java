@@ -32,8 +32,8 @@ public class Automaton {
             put("while", "Palavra Reservada");
             put("do", "Palavra Reservada");
             put("not", "Palavra Reservada");
-            put("or", "Operador Aditivo");
-            put("and", "Operador Multiplicativo");
+            put("or", "Operador Logico");
+            put("and", "Operador Logico");
         }
     };
 
@@ -42,8 +42,8 @@ public class Automaton {
             put(0, "NF");
             put(1, "NF");
             put(2, "Identificador");
-            put(3, "Numero Inteiro");
-            put(4, "Numero Real");
+            put(3, "integer");
+            put(4, "real");
             put(5, "Delimitador");
             put(6, "Delimitador");
             put(7, "Atribuicao");

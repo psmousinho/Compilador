@@ -1,5 +1,7 @@
 package common;
 
+import java.util.Objects;
+
 public class Token {
 
     private final String value;
@@ -27,4 +29,23 @@ public class Token {
     public String toString() {
         return value + " | " + classification + " | " + line;
     }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 11 * hash + Objects.hashCode(this.value);
+        hash = 11 * hash + Objects.hashCode(this.classification);
+        hash = 11 * hash + this.line;
+        return hash;
+    }
+    
+    public boolean equals(Token other) {
+        if(   this.value.equals(other.value)
+           && this.classification.equals(other.classification)
+           && this.line == other.line ) {
+            return true;
+        }
+        return false;
+    }
+
 }
