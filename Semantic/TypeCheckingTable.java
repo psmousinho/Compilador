@@ -64,7 +64,7 @@ public class TypeCheckingTable {
                 else if(t1.equals("real") && t2.equals("integer")){
                     tpt.push("real");
                 }
-                else if(t1.equals("inteiro") && t2.equals("real")){
+                else if(t1.equals("integer") && t2.equals("real")){
                     tpt.push("real");
                 }
                 else if(t1.equals("real") && t2.equals("real")){

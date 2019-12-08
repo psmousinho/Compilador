@@ -35,7 +35,7 @@ public class SymbolTable {
         if(!scopeContainsSymbol(t)) {
             st.add(t);
         } else {
-            throw new DuplicateIdentifierException("Identificador duplciado: " + t.getValue() + " na linha: " + t.getLine());
+            throw new DuplicateIdentifierException("Identificador duplicado: " + t.getValue() + " na linha: " + t.getLine());
         }
         
     }
@@ -45,7 +45,7 @@ public class SymbolTable {
             if(token.getValue().equals(t.getValue()))
                 return;
         }
-        throw new UnidentifiedSymbolException("Simbolo nao identifica: " + t.getValue() +" na Linha " + t.getLine());
+        throw new UnidentifiedSymbolException("Simbolo nao identificado: " + t.getValue() +" na Linha " + t.getLine());
     }
     
     public void removeLastScope(){

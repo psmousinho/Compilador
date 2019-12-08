@@ -24,6 +24,7 @@ public class Automaton {
             put("real", "Palavra Reservada");
             put("boolean", "Palavra Reservada");
             put("procedure", "Palavra Reservada");
+			put("function", "Palavra Reservada");
             put("begin", "Palavra Reservada");
             put("end", "Palavra Reservada");
             put("if", "Palavra Reservada");
@@ -34,6 +35,8 @@ public class Automaton {
             put("not", "Palavra Reservada");
             put("or", "Operador Logico");
             put("and", "Operador Logico");
+			put("true","boolean");
+            put("false","boolean");
         }
     };
 
