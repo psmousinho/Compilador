@@ -3,24 +3,15 @@ program teste; {adasda}
     		valor1:integer;
     		valor2:real;
 
-	procedure proc1(qqq:integer);
+	function fun(qqq:integer): integer;
 		var
 			va1:integer;
 			va2:real;
 		begin
 			va2:= 3.9;
 		end;
-	
-	procedure proc2(aaa:real;qqq:integer);
-		var
-			valor4:real;
-		begin
-			valor4:= aaa+qqq;
-		end
-
-
 
 	begin
-            valor1 := valor2;
+            valor2 := fun(12);
 	end.
 

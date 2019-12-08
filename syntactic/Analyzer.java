@@ -166,7 +166,7 @@ public class Analyzer {
         }
     }
 
-    private void tipo() throws MismatchSymbolException {
+    private String tipo() throws MismatchSymbolException {
         if (!(current_symbol.getValue().equals("integer") //se o símbolo atual não for "integer,real ou boolean", então:
                 || current_symbol.getValue().equals("real")
                 || current_symbol.getValue().equals("boolean"))) {
@@ -174,10 +174,11 @@ public class Analyzer {
         } else {
             tcp.defineBufferType(current_symbol.getValue());
         }
+        return current_symbol.getValue();
     }
 
     private void declaracoes_subprogramas() throws MismatchSymbolException, DuplicateIdentifierException, UnidentifiedSymbolException, InvalidOperandsException {
-        if (current_symbol.getValue().equals("procedure")|| current_symbol.getValue().equals("function") ) {
+        if (current_symbol.getValue().equals("procedure") || current_symbol.getValue().equals("function")) {
             declaracao_subprograma();
             getNextSym();
             if (current_symbol.getValue().equals(";")) {
@@ -190,9 +191,7 @@ public class Analyzer {
             returnPrevSym();
         }
     }
-	
-/*
-	
+
     private void declaracao_subprograma() throws MismatchSymbolException, DuplicateIdentifierException, UnidentifiedSymbolException, InvalidOperandsException {
         if (current_symbol.getValue().equals("procedure")) {
             getNextSym();
@@ -218,53 +217,22 @@ public class Analyzer {
             } else {
                 throw new MismatchSymbolException("Esperando Identificador na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
             }
-        } else {
-            throw new MismatchSymbolException("Esperando procedure na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
-        }
-    }
-*/
-
-// com function
-private void declaracao_subprograma() throws MismatchSymbolException, DuplicateIdentifierException, UnidentifiedSymbolException, InvalidOperandsException {
-        if (current_symbol.getValue().equals("procedure")) {
+        } else if (current_symbol.getValue().equals("function")) {
             getNextSym();
-            if(current_symbol.getClassification().equals("Identificador")){
+            if (current_symbol.getClassification().equals("Identificador")) {
                 st.addSymbol(current_symbol);
                 st.addMark();
+                Token aux = current_symbol;
                 tcp.openScope();
                 getNextSym();
                 argumentos();
                 getNextSym();
-                if(current_symbol.getValue().equals(";")){
+                if (current_symbol.getValue().equals(":")) {
                     getNextSym();
-                    declaracoes_variaveis();
+                    String aux2 = tipo();
                     getNextSym();
-                    declaracoes_subprogramas();
-                    getNextSym();
-                    comando_composto();
-                    st.removeLastScope();
-                    tcp.removeScope();    
-                }else{
-                 throw new MismatchSymbolException("Esperando ; na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());   
-                }
-            }else{
-                throw new MismatchSymbolException("Esperando Identificador na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue()); 
-            }
-        }else if(current_symbol.getValue().equals("function")){
-            getNextSym();
-            if(current_symbol.getClassification().equals("Identificador")){
-                st.addSymbol(current_symbol);
-                st.addMark();
-                tcp.openScope();
-                getNextSym();
-                argumentos();
-                getNextSym();
-                if(current_symbol.getValue().equals(":")){
-                  getNextSym();
-                  if(current_symbol.getValue().equals("integer")){
-                      getNextSym();
-                      if(current_symbol.getValue().equals(";")){
-                          getNextSym();
+                    if (current_symbol.getValue().equals(";")) {
+                        getNextSym();
                         declaracoes_variaveis();
                         getNextSym();
                         declaracoes_subprogramas();
@@ -272,24 +240,21 @@ private void declaracao_subprograma() throws MismatchSymbolException, DuplicateI
                         comando_composto();
                         st.removeLastScope();
                         tcp.removeScope();
-                      }else{
-                          throw new MismatchSymbolException("Esperando ; na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
-                      }
-                  }else{
-                      throw new MismatchSymbolException("Esperando integer na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
-                  }
-                }else{
-                 throw new MismatchSymbolException("Esperando : na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());   
+                        tcp.addToBuffer(aux);
+                        tcp.defineBufferType(aux2);
+                    } else {
+                        throw new MismatchSymbolException("Esperando ; na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
+                    }
+                } else {
+                    throw new MismatchSymbolException("Esperando : na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
                 }
-            }else{
+            } else {
                 throw new MismatchSymbolException("Esperando Identificador na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
             }
-        }else{
-                throw new MismatchSymbolException("Esperando palavra reservada na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
-            }  
-    }// fim do metodo    
-	
-	
+        } else {
+            throw new MismatchSymbolException("Esperando procedure na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
+        }
+    }
 
     private void argumentos() throws MismatchSymbolException, DuplicateIdentifierException {
         if (current_symbol.getValue().equals("(")) {
@@ -434,7 +399,7 @@ private void declaracao_subprograma() throws MismatchSymbolException, DuplicateI
             tcp.pushId(aux);
             getNextSym();
             expressao();
-            tcp.executeOp("Atribuicao",current_symbol.getLine());
+            tcp.executeOp("Atribuicao", current_symbol.getLine());
         } else {
             returnPrevSym();
         }
@@ -465,7 +430,7 @@ private void declaracao_subprograma() throws MismatchSymbolException, DuplicateI
         if (op_relacional()) {
             getNextSym();
             expressao_simples();
-            tcp.executeOp("Operador Relacional",current_symbol.getLine());
+            tcp.executeOp("Operador Relacional", current_symbol.getLine());
         } else {
             returnPrevSym();
         }
@@ -484,7 +449,7 @@ private void declaracao_subprograma() throws MismatchSymbolException, DuplicateI
         if (op_aditivo()) {
             getNextSym();
             termo();
-            tcp.executeOp("Operador Aditivo",current_symbol.getLine());
+            tcp.executeOp("Operador Aditivo", current_symbol.getLine());
             getNextSym();
             expressao_simples2();
         } else {
@@ -502,7 +467,7 @@ private void declaracao_subprograma() throws MismatchSymbolException, DuplicateI
         if (op_multiplicativo()) {
             getNextSym();
             fator();
-            tcp.executeOp("Operador Multiplicativo",current_symbol.getLine());
+            tcp.executeOp("Operador Multiplicativo", current_symbol.getLine());
             getNextSym();
             termo2();
         } else {
@@ -513,26 +478,29 @@ private void declaracao_subprograma() throws MismatchSymbolException, DuplicateI
     private void fator() throws MismatchSymbolException, UnidentifiedSymbolException, InvalidOperandsException {
         if (current_symbol.getClassification().equals("Identificador")) {
             st.containsSymbol(current_symbol);
-            Token aux = current_symbol;
+            //Token aux = current_symbol;
+            tcp.pushId(current_symbol);
             getNextSym();
             if (current_symbol.getValue().equals("(")) {
+                getNextSym();
                 lista_expressoes();
+                getNextSym();
                 if (!current_symbol.getValue().equals(")")) {
                     throw new MismatchSymbolException("Esperando ) na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
                 }
             } else {
                 returnPrevSym();
-                tcp.pushId(aux);
+                //tcp.pushId(aux);
             }
         } else if (current_symbol.getClassification().equals("integer")) {
             tcp.pushType("integer");
-            
+
         } else if (current_symbol.getClassification().equals("real")) {
             tcp.pushType("real");
-            
+
         } else if (current_symbol.getValue().equals("true") || (current_symbol.getValue().equals("false"))) {
             tcp.pushType("boolean");
-            
+
         } else if (current_symbol.getValue().equals("(")) {
             getNextSym();
             expressao();
