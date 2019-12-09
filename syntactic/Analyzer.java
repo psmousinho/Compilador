@@ -6,6 +6,7 @@ import Semantic.exceptions.DuplicateIdentifierException;
 import Semantic.exceptions.InvalidOperandsException;
 import Semantic.exceptions.UnidentifiedSymbolException;
 import common.Token;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import syntactic.exceptions.EmptyOptionException;
 import syntactic.exceptions.MismatchSymbolException;
@@ -139,31 +140,37 @@ public class Analyzer {
         }
     }
 
-    private void lista_identificadores() throws MismatchSymbolException, DuplicateIdentifierException {
+    private ArrayList<String> lista_identificadores() throws MismatchSymbolException, DuplicateIdentifierException {
+        ArrayList<String> ins = new ArrayList<>();
         if (current_symbol.getClassification().equals("Identificador")) {
             st.addSymbol(current_symbol);
             tcp.addToBuffer(current_symbol);
+            ins.add(current_symbol.getValue());
             getNextSym();
-            lista_identificadores2();
+            ins.addAll(lista_identificadores2());
+            return ins;
         } else {
             throw new MismatchSymbolException("Esperando Identificador na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
         }
     }
 
-    private void lista_identificadores2() throws MismatchSymbolException, DuplicateIdentifierException {
+    private ArrayList<String> lista_identificadores2() throws MismatchSymbolException, DuplicateIdentifierException {
+        ArrayList<String> ins = new ArrayList<>();
         if (current_symbol.getValue().equals(",")) {
-            getNextSym();
+            getNextSym();   
             if (current_symbol.getClassification().equals("Identificador")) {
                 st.addSymbol(current_symbol);
                 tcp.addToBuffer(current_symbol);
+                ins.add(current_symbol.getValue());
                 getNextSym();
-                lista_identificadores2();
+                ins.addAll(lista_identificadores2());
             } else {
                 throw new MismatchSymbolException("Esperando Identificador na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
             }
         } else {
             returnPrevSym();
         }
+         return ins;
     }
 
     private String tipo() throws MismatchSymbolException {
@@ -199,8 +206,10 @@ public class Analyzer {
                 st.addSymbol(current_symbol);
                 st.addMark();
                 tcp.openScope();
+                String aux = current_symbol.getValue();
                 getNextSym();
-                argumentos();
+                ArrayList<String> args = argumentos();
+                tcp.addFunc(aux, args);
                 getNextSym();
                 if (current_symbol.getValue().equals(";")) {
                     getNextSym();
@@ -211,6 +220,7 @@ public class Analyzer {
                     comando_composto();
                     st.removeLastScope();
                     tcp.removeScope();
+                    tcp.addFunc(aux, args);
                 } else {
                     throw new MismatchSymbolException("Esperando ; na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
                 }
@@ -225,11 +235,14 @@ public class Analyzer {
                 Token aux = current_symbol;
                 tcp.openScope();
                 getNextSym();
-                argumentos();
+                ArrayList<String> args = argumentos();
                 getNextSym();
                 if (current_symbol.getValue().equals(":")) {
                     getNextSym();
                     String aux2 = tipo();
+                    tcp.addToBuffer(aux);    
+                    tcp.defineBufferType(aux2);
+                    tcp.addFunc(aux.getValue(),args);
                     getNextSym();
                     if (current_symbol.getValue().equals(";")) {
                         getNextSym();
@@ -242,6 +255,7 @@ public class Analyzer {
                         tcp.removeScope();
                         tcp.addToBuffer(aux);
                         tcp.defineBufferType(aux2);
+                        tcp.addFunc(aux.getValue(),args);
                     } else {
                         throw new MismatchSymbolException("Esperando ; na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
                     }
@@ -256,39 +270,44 @@ public class Analyzer {
         }
     }
 
-    private void argumentos() throws MismatchSymbolException, DuplicateIdentifierException {
+    private ArrayList<String> argumentos() throws MismatchSymbolException, DuplicateIdentifierException {
         if (current_symbol.getValue().equals("(")) {
             getNextSym();
-            lista_parametros();
+            ArrayList<String> args = lista_parametros();
             getNextSym();
             if (!current_symbol.getValue().equals(")")) {
                 throw new MismatchSymbolException("Esperando \")\"  na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
             }
+            return args;
         } else {
             returnPrevSym();
         }
+        return null;
     }
 
-    private void lista_parametros() throws MismatchSymbolException, DuplicateIdentifierException {
-        lista_identificadores();
+    private ArrayList<String> lista_parametros() throws MismatchSymbolException, DuplicateIdentifierException {
+        ArrayList<String> ids = lista_identificadores();
         getNextSym();
         if (current_symbol.getValue().equals(":")) {
             getNextSym();
-            tipo();
+            ids.add(tipo());
             getNextSym();
-            lista_parametros2();
+            ids.addAll(lista_parametros2());
+            return ids;
         } else {
             throw new MismatchSymbolException("Esperando : na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
         }
+        
     }
 
-    private void lista_parametros2() throws MismatchSymbolException, DuplicateIdentifierException {
+    private  ArrayList<String> lista_parametros2() throws MismatchSymbolException, DuplicateIdentifierException {
         if (current_symbol.getValue().equals(";")) {
             getNextSym();
-            lista_parametros();
+            return lista_parametros();
         } else {
             returnPrevSym();
         }
+        return new ArrayList<>();
     }
 
     private void comando_composto() throws MismatchSymbolException, UnidentifiedSymbolException, InvalidOperandsException {
@@ -390,6 +409,7 @@ public class Analyzer {
         if (current_symbol.getValue().equals("(")) {
             getNextSym();
             lista_expressoes();
+            tcp.countArgs(aux.getValue(), current_symbol.getLine());
             getNextSym();
             if (!current_symbol.getValue().equals(")")) {
                 throw new MismatchSymbolException("Esperando ) na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
@@ -478,12 +498,13 @@ public class Analyzer {
     private void fator() throws MismatchSymbolException, UnidentifiedSymbolException, InvalidOperandsException {
         if (current_symbol.getClassification().equals("Identificador")) {
             st.containsSymbol(current_symbol);
-            //Token aux = current_symbol;
+            Token aux = current_symbol;
             tcp.pushId(current_symbol);
             getNextSym();
             if (current_symbol.getValue().equals("(")) {
                 getNextSym();
                 lista_expressoes();
+                tcp.countArgs(aux.getValue(), current_symbol.getLine());
                 getNextSym();
                 if (!current_symbol.getValue().equals(")")) {
                     throw new MismatchSymbolException("Esperando ) na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());

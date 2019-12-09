@@ -13,7 +13,7 @@ public class Main {
     public static void main(String[] args) {
 
         try {
-            File file = new File("C:\\Users\\Pablo Suria\\Documents\\Java\\NetBeans\\compilador\\src\\test files\\test0");
+            File file = new File("C:\\Users\\Pablo Suria\\Documents\\Java\\NetBeans\\compilador\\src\\test files\\41");
 
             Automaton a = new Automaton();
             LinkedList<Token> list = a.parse(file);
