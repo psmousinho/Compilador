@@ -5,9 +5,15 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.Normalizer;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import lexicon.exceptions.*;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 
 public class Automaton {
 
@@ -16,45 +22,22 @@ public class Automaton {
     private String token;
     private int line;
 
-    static final HashMap<String, String> reserved = new HashMap<String, String>() {
-        {
-            put("program", "Palavra Reservada");
-            put("var", "Palavra Reservada");
-            put("integer", "Palavra Reservada");
-            put("real", "Palavra Reservada");
-            put("boolean", "Palavra Reservada");
-            put("procedure", "Palavra Reservada");
-            put("function", "Palavra Reservada");
-            put("begin", "Palavra Reservada");
-            put("end", "Palavra Reservada");
-            put("if", "Palavra Reservada");
-            put("then", "Palavra Reservada");
-            put("else", "Palavra Reservada");
-            put("while", "Palavra Reservada");
-            put("do", "Palavra Reservada");
-            put("not", "Palavra Reservada");
-            put("or", "Operador Logico");
-            put("and", "Operador Logico");
-            put("true","boolean");
-            put("false","boolean");
-        }
-    };
-
     static final HashMap<Integer, String> classification = new HashMap<Integer, String>() {
         {
             put(0, "NF");
-            put(1, "NF");
-            put(2, "Identificador");
-            put(3, "integer");
-            put(4, "real");
-            put(5, "Delimitador");
-            put(6, "Delimitador");
-            put(7, "Atribuicao");
-            put(8, "Operador Relacional");
-            put(9, "Operador Relacional");
-            put(10, "Operador Relacional");
-            put(11, "Operador Aditivo");
-            put(12, "Operador Multiplicativo");
+            put(2, "Ponto Final");
+            put(3, "Ponto Exclamacao");
+            put(4, "Ponto Interrogacao");
+            put(5, "Virgula");
+        }
+    };
+    
+    static final HashMap<String, String> dicAux = new HashMap<String, String>() {
+        {
+            put("os", "artigo");
+            put("disse", "verbo");
+            put("dos", "contração");
+            
         }
     };
 
@@ -70,104 +53,129 @@ public class Automaton {
             //estado inicial
             case 0:
                 if (symbol.matches("\\s")) {
-                    if (symbol.matches("\\n")) {
-                        line++;
-                    }
-                } else if (symbol.matches("\\{")) {
+                   state = 0;
+                } else if(symbol.matches("\\w|ç|ã|õ")){
                     state = 1;
-                } else if (symbol.matches("[a-zA-Z]")) {
-                    state = 2;
-                } else if (symbol.matches("\\d")) {
-                    state = 3;
-                } else if (symbol.matches(";|\\.|,|\\(|\\)")) {
-                    state = 5;
-                } else if (symbol.matches(":")) {
-                    state = 6;
-                } else if (symbol.matches("<")) {
-                    state = 8;
-                } else if (symbol.matches(">")) {
-                    state = 9;
-                } else if (symbol.matches("=")) {
-                    state = 10;
-                } else if (symbol.matches("\\+|\\-")) {
-                    state = 11;
-                } else if (symbol.matches("\\*|\\/")) {
-                    state = 12;
-                } else {
-                    return false;
-                }
-                break;
-            //comentario
-            case 1:
-                if (symbol.matches("\\}")) {
-                    state = 0;
-                } else if (symbol.matches("\\n")) {
+                }else if (symbol.equals(".")) {
                     line++;
-                }
-                break;
-            //identificador
-            case 2:
-                if (symbol.matches("\\W")) {
-                    return false;
-                }
-                break;
-            //numero
-            case 3:
-                if (symbol.matches("\\.")) {
+                    state = 2;
+                } else if (symbol.equals("!")) {
+                    line++;
+                    state = 3;
+                } else if (symbol.equals("?")) {
+                    line++;
                     state = 4;
-                } else if (symbol.matches("\\D")) {
+                } else if (symbol.equals(",")) {
+                    state = 5;
+                } else {
                     return false;
                 }
                 break;
-            //numero real
+            //lendo palavra
+            case 1:
+                if (symbol.matches("\\W") && !symbol.matches("ç|ã|õ")) {
+                    return false;
+                }
+                break;
+            //ponto final
+            case 2:
+                return false;
+            //ponto exclamacao
+            case 3:
+                return false;
+            //ponto interrogacao
             case 4:
-                if (symbol.matches("\\D")) {
-                    return false;
-                }
-                break;
-            //delimitador
+                return false;
+            //virgula
             case 5:
-                return false;
-            //delimitador :
-            case 6:
-                if (symbol.matches("=")) {
-                    state = 7;
-                } else {
-                    return false;
-                }
-                break;
-            //atribuicao
-            case 7:
-                return false;
-            //relacional <
-            case 8:
-                if (symbol.matches("=|>")) {
-                    state = 10;
-                } else {
-                    return false;
-                }
-                break;
-            //relacional >
-            case 9:
-                if (symbol.matches("=")) {
-                    state = 10;
-                } else {
-                    return false;
-                }
-                break;
-            //realcional =|<>|<=|>=
-            case 10:
-                return false;
-            //aditivo    
-            case 11:
-                return false;
-            //multiplicativo
-            case 12:
                 return false;
         }
         return true;
     }
 
+    private String getDictionary(String word) {
+        word = word.replace("ç", "c");
+        word = word.replace("ã", "a");
+        word = word.replace("õ", "o");
+        word = word.toLowerCase();
+        
+        if(dicAux.containsKey(word)) {
+            return dicAux.get(word);      
+        }
+        
+        try { 
+            Document doc = Jsoup.connect("https://www.dicio.com.br/" + word).get();
+            Elements cl = doc.getElementsByClass("cl");
+            
+            if(!cl.isEmpty()) {
+                return cl.first().text().stripLeading().split("\\s")[0];
+            } else {
+                cl = doc.getElementsByClass("significado");
+                if(!cl.isEmpty()){
+                    if(cl.first().text().contains("verbo")) {
+                        return "verbo";
+                    } else if(cl.first().text().contains("plural")) {
+                        String aux = cl.first().text().split("\\s")[5];
+                        return getDictionary(aux.substring(0,aux.length()-1));
+                    } else if(cl.first().text().contains("feminino")) {
+                        String aux = cl.first().text().split("\\s")[5];
+                        return getDictionary(aux.substring(0,aux.length()-1));
+                    }
+                }
+            }
+            
+        } catch (IOException ex) {
+            Logger.getLogger(Automaton.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return "null";
+    }
+    
+    /*private void stemização(LinkedList<Token> list) {
+        try { 
+            
+            for(Token tk : list){
+                Document doc = Jsoup.connect("https://www.dicio.com.br/" + tk.getValue()).get();
+                Elements cl = doc.getElementsByClass("cl");
+
+                if(cl.isEmpty()) {
+                   cl = doc.getElementsByClass("significado");
+                   if(!cl.isEmpty()){
+                        if(cl.first().text().contains("verbo")) {
+                            String aux = cl.first().text().split("\\s")[4];
+                            aux = aux.substring(0,aux.length()-1);
+                            tk.setValue(aux);  
+                        } else if(cl.first().text().contains("plural")) {
+                            String aux = cl.first().text().split("\\s")[5];
+                            aux = aux.substring(0,aux.length()-1);
+                            tk.setValue(aux);
+                        } else if(cl.first().text().contains("feminino")) {
+                            String aux = cl.first().text().split("\\s")[5];
+                            aux = aux.substring(0,aux.length()-1);
+                            tk.setValue(aux);
+                        }
+                    }
+                } 
+            }  
+        } catch (IOException ex) {
+            Logger.getLogger(Automaton.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }*/
+    
+    private LinkedList<Token> removeStopwprds(LinkedList<Token> list) {
+        LinkedList<Token> newList = new LinkedList<>();
+        for(Token tk : list) {
+            String cla = tk.getClassification();
+            if(cla.equals("artigo") || cla.equals("conjução") || cla.equals("preposição") || cla.equals("contração") ||
+               cla.equals("Ponto Final") || cla.equals("Ponto Exclamacao") || cla.equals("Ponto Interrogacao") || cla.equals("Virgula"))
+                continue;
+            
+            newList.add(tk);
+        }
+        return newList;
+    }
+    
     public LinkedList<Token> parse(File file) throws UnknownSymbolException, CommentNotClosedException {
         LinkedList<Token> tokenList = new LinkedList<>();
         FileReader fr;
@@ -185,7 +193,7 @@ public class Automaton {
 
                 /*salva caracteres validos e.g caracteres que levam para fora do estado inicial
                 e que nao foram lidos durante o estado de comentario*/
-                if (state != 0 && state != 1) {
+                if (state != 0) {
                     wordBuffer += cha;
                 }
 
@@ -199,7 +207,7 @@ public class Automaton {
                     throw new UnknownSymbolException(line);
                 } //adicionando o ultimo token valido
                 else {
-                    String cla = (state == 2 && reserved.containsKey(token)) ? reserved.get(token) : classification.get(lastSafeState);
+                    String cla = (state == 1) ? getDictionary(token) : classification.get(lastSafeState);
 
                     tokenList.add(new Token(token, cla, line));
                     br.reset();
@@ -209,12 +217,9 @@ public class Automaton {
                 }
             }
 
-            //se o ultimo estado valido foi o de comentario
-            if (lastSafeState == 1) {
-                throw new CommentNotClosedException();
-            } //se o ultimo estado valido nao foi o inicial. Serve para pegar o ultimo token escrito
-            else if (lastSafeState != 0) {
-                String cla = (state == 2 && reserved.containsKey(token)) ? reserved.get(token) : classification.get(lastSafeState);
+            //se o ultimo estado valido nao foi o inicial. Serve para pegar o ultimo token escrito
+            if (lastSafeState != 0) {
+                String cla = (state == 1) ? getDictionary(token) : classification.get(lastSafeState);
                 tokenList.add(new Token(token, cla, line));
             }
 
@@ -223,8 +228,10 @@ public class Automaton {
         } catch (IOException ex) {
             System.err.println("Erro durante Parsing");
         }
-
-        return tokenList;
+        
+        //stemização(tokenList);
+        return removeStopwprds(tokenList);
     }
-
+    
+    
 }

@@ -4,7 +4,7 @@ import java.util.Objects;
 
 public class Token {
 
-    private final String value;
+    private String value;
     private final String classification;
     private final int line;
 
@@ -14,6 +14,11 @@ public class Token {
         this.line = line;
     }
 
+    public void setValue(String value) {
+        this.value = value;
+    }
+    
+    
     public String getValue() {
         return value;
     }
