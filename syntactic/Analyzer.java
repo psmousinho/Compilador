@@ -49,7 +49,7 @@ public class Analyzer {
 
     public void analyze() throws MismatchSymbolException, DuplicateIdentifierException, UnidentifiedSymbolException, InvalidOperandsException {
         getNextSym();
-        programa();
+        texto();
     }
 
     /**
@@ -57,6 +57,96 @@ public class Analyzer {
      *
      * @throws MismatchSymbolException
      */
+	 
+	 
+	 
+	 private void texto()throws MismatchSymbolException{
+        getNextSym();
+        sentenca();
+        getNextSym();
+        if(current_symbol.getValue().equals(".") | current_symbol.getValue().equals("?") | current_symbol.getValue().equals("!")){
+            System.out.println();
+            System.out.println("***** SYNTATIC DONE *****");
+            System.out.println();
+        }else{
+            getNextSym();
+            texto2();
+        }
+        
+        
+    }
+    
+    private void texto2() throws MismatchSymbolException{
+        getNextSym();
+        sentenca();
+        getNextSym();
+        if(current_symbol.getValue().equals(".") || current_symbol.getValue().equals("?") || current_symbol.getValue().equals("!")){
+            System.out.println();
+            System.out.println("***** SYNTATIC DONE *****");
+            System.out.println();
+        } 
+    }
+   
+    /*
+    private void ponto(){
+        if(current_symbol.getValue().equals(".")){
+            return current_symbol.getClassification().equals("Ponto Final");
+        }
+        
+        if(current_symbol.getValue().equals("!")){
+            return current_symbol.getClassification().equals("Ponto Exclamacao");
+        }
+        
+        if(current_symbol.getValue().equals(".")){
+            return current_symbol.getClassification().equals("Ponto Final");
+        }
+    }
+    */
+
+    private void sentenca() throws MismatchSymbolException{
+        getNextSym();
+        sintagma_nominal();
+        sintagma_verbal();
+    }
+    
+    
+    private void sintagma_nominal()throws MismatchSymbolException {
+        getNextSym();
+        
+        /*
+        while(current_symbol.getValue().equals("substantivo") || current_symbol.getValue().equals("pronome") || current_symbol.getValue().equals("adjetivo")){
+            getNextSym();
+        }
+        */
+        
+      
+        if(current_symbol.getValue().equals("substantivo") || current_symbol.getValue().equals("pronome") || current_symbol.getValue().equals("adjetivo")){
+         getNextSym();
+        }  if(current_symbol.getValue().equals("substantivo") || current_symbol.getValue().equals("pronome") || current_symbol.getValue().equals("adjetivo")){
+            getNextSym();
+        } if(current_symbol.getValue().equals("substantivo") || current_symbol.getValue().equals("pronome") || current_symbol.getValue().equals("adjetivo")){
+            getNextSym();
+        }else{
+         throw new MismatchSymbolException("Esperando sintagma nominal na linha " + current_symbol.getLine() + " antes de " + current_symbol.getValue());   
+        }
+        
+    }
+    
+    private void sintagma_verbal()throws MismatchSymbolException{
+        getNextSym();
+        if(current_symbol.getValue().equals("verbo") || current_symbol.getValue().equals("adverbio") ){
+         getNextSym();
+        } else if(current_symbol.getValue().equals("verbo") || current_symbol.getValue().equals("adverbio") ){
+            getNextSym();
+        } else{
+            getNextSym();
+            sintagma_nominal();  
+        }
+    }
+	 
+	 
+	
+	/* 
     private void programa() throws MismatchSymbolException, DuplicateIdentifierException, UnidentifiedSymbolException, InvalidOperandsException {
         if (current_symbol.getValue().equals("program")) {
             getNextSym();
@@ -552,5 +642,7 @@ public class Analyzer {
     private boolean op_multiplicativo() {
         return current_symbol.getClassification().equals("Operador Multiplicativo");
     }
+	
+	*/
 
 }

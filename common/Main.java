@@ -13,7 +13,7 @@ public class Main {
     public static void main(String[] args) {
 
         try {
-            File file = new File("/home/pablo/workspace/mavenproject1/test files/1n");
+            File file = new File("...1n");
 
             Automaton a = new Automaton();
             LinkedList<Token> list = a.parse(file);
@@ -21,8 +21,8 @@ public class Main {
                 System.out.println(t);
             }
 
-           // Analyzer sintatic = new Analyzer(list);
-           // sintatic.analyze();
+            Analyzer sintatic = new Analyzer(list);
+            sintatic.analyze();
 
         } catch (Exception ex) {
             ex.printStackTrace();
