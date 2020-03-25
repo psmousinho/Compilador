@@ -37,6 +37,12 @@ public class Automaton {
             put("os", "artigo");
             put("disse", "verbo");
             put("dos", "contração");
+            put("do", "contração");
+            put("que", "conjução");
+            put("testes", "substantivo");
+            put("foi", "verbo");
+            put("o", "artigo");
+            put("são", "verbo");
             
         }
     };
@@ -167,8 +173,7 @@ public class Automaton {
         LinkedList<Token> newList = new LinkedList<>();
         for(Token tk : list) {
             String cla = tk.getClassification();
-            if(cla.equals("artigo") || cla.equals("conjução") || cla.equals("preposição") || cla.equals("contração") ||
-               cla.equals("Ponto Final") || cla.equals("Ponto Exclamacao") || cla.equals("Ponto Interrogacao") || cla.equals("Virgula"))
+            if(cla.equals("artigo") || cla.equals("conjução") || cla.equals("preposição") || cla.equals("contração") || cla.equals("Virgula"))
                 continue;
             
             newList.add(tk);
