@@ -59,7 +59,7 @@ public class Analyzer {
      */
 	 
 	
-    private void texto()throws MismatchSymbolException{
+  private void texto()throws MismatchSymbolException{
         getNextSym();
         paragrafo_texto();
         getNextSym();
@@ -73,65 +73,79 @@ public class Analyzer {
         }
     }
     
-    private void paragrafo_texto(){
-        getNextSym();
-        frases();
-        getNextSym();
-        if(current_symbol.getValue().equals("paragrafo")){
+    private void paragrafo_texto() throws MismatchSymbolException{ 
+        try{
+            getNextSym();
+            frases();
             getNextSym();
             paragrafo_texto();
-        }else{
+        } catch (EmptyOptionException ex){
+            returnPrevSym();
+        }
+    }
+     
+   
+    
+    private void frases() throws EmptyOptionException, MismatchSymbolException{
+        try{
+            getNextSym();
+            oracao();
+            if(current_symbol.getValue().equals(".") | current_symbol.getValue().equals("?") | current_symbol.getValue().equals("!")){
+                getNextSym();
+                frases();
+            }else{
+                throw new MismatchSymbolException("Esperando pontuação na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
+            }   
+        }catch(EmptyOptionException ex){
             returnPrevSym();
         }
     }
     
-    private void frases(){
-        getNextSym();
-        oracao();
-        if(current_symbol.getValue().equals(".") | current_symbol.getValue().equals("?") | current_symbol.getValue().equals("!")){
-         getNextSym();
-         frases();
-        }
-        else{
-            returnPrevSym();
-        }
-    }
-    
-    private void oracao(){
+    private void oracao() throws EmptyOptionException, MismatchSymbolException{
         getNextSym();
         np();
         getNextSym();
         vp();
     }
     
-    private void np(){
+    private void np() throws EmptyOptionException, MismatchSymbolException{
         getNextSym();
         adjetivopc();
         getNextSym();
         np_linha();
     }
     
-    private void np_linha(){
-        getNextSym();
-        np_linha_linha();
-        getNextSym();
-        np();
-    }
-    
-    private void np_linha_linha(){
-        getNextSym();
-        if(current_symbol.getValue().equals("pronome")){
-            getNextSym(); 
-            if(current_symbol.getValue().equals("substantivo")){
-                getNextSym();
-                adjetivopc();
-            }
-        }else{
+    private void np_linha() throws  MismatchSymbolException{
+        try{
+            getNextSym();
+            np_linha_linha();
+            getNextSym();
+            np();    
+        }catch(EmptyOptionException ex){
             returnPrevSym();
         }
     }
     
-    private void adjetivopc(){
+    private void np_linha_linha() throws MismatchSymbolException{
+        try{
+            getNextSym();
+            if(current_symbol.getValue().equals("pronome")){
+                getNextSym();           
+            }else{
+                throw new MismatchSymbolException("Esperando pronome na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
+            }
+            if(current_symbol.getValue().equals("substantivo")){
+                    getNextSym();       
+            }else{
+                throw new MismatchSymbolException("Esperando substantivo na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
+            }
+            adjetivopc();       
+        }catch(EmptyOptionException ex){
+            returnPrevSym();
+        }
+    }
+    
+    private void adjetivopc() throws EmptyOptionException{
         getNextSym();
         if(current_symbol.getValue().equals("adjetivo")){
             getNextSym();
@@ -142,7 +156,7 @@ public class Analyzer {
         
     }
     
-    private void vp(){
+    private void vp() throws MismatchSymbolException, EmptyOptionException{
         getNextSym();
         adverbiopc();
         getNextSym();
@@ -152,9 +166,11 @@ public class Analyzer {
             getNextSym();
             adverbiopc();
             getNextSym();
-            vp_complemento();
-            
+            vp_complemento();     
+        }else{
+            throw new MismatchSymbolException("Esperando verbo na linha" + current_symbol.getLine() + " antes de " + current_symbol.getValue());
         }
+        
     }
     
     
@@ -176,9 +192,10 @@ public class Analyzer {
         }
     }
     
-    private void vp_complemento(){
+    private void vp_complemento()throws EmptyOptionException, MismatchSymbolException{
         getNextSym();
-        if(current_symbol.getValue().equals("citacao")){
+        try{
+            if(current_symbol.getValue().equals("citacao")){
             getNextSym();
             oracao();
             getNextSym();
@@ -186,6 +203,9 @@ public class Analyzer {
             getNextSym();
         }else{  
             np();
+       }   
+        }catch(EmptyOptionException ex){
+            returnPrevSym();
         }
     }
     
@@ -194,8 +214,7 @@ public class Analyzer {
         if(current_symbol.getValue().equals("citacao")){
             getNextSym();
         }
-     } 
-	 
+     }
 	 
 	
 	/* 
