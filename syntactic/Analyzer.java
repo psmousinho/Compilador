@@ -58,11 +58,10 @@ public class Analyzer {
      * @throws MismatchSymbolException
      */
 	 
-	 
-	 
-	 private void texto()throws MismatchSymbolException{
+	
+    private void texto()throws MismatchSymbolException{
         getNextSym();
-        sentenca();
+        paragrafo_texto();
         getNextSym();
         if(current_symbol.getValue().equals(".") | current_symbol.getValue().equals("?") | current_symbol.getValue().equals("!")){
             System.out.println();
@@ -70,79 +69,132 @@ public class Analyzer {
             System.out.println();
         }else{
             getNextSym();
-            texto2();
+            paragrafo_texto();
         }
-        
-        
     }
     
-    private void texto2() throws MismatchSymbolException{
+    private void paragrafo_texto(){
         getNextSym();
-        sentenca();
+        frases();
         getNextSym();
-        if(current_symbol.getValue().equals(".") || current_symbol.getValue().equals("?") || current_symbol.getValue().equals("!")){
-            System.out.println();
-            System.out.println("***** SYNTATIC DONE *****");
-            System.out.println();
-        } 
-    }
-   
-    /*
-    private void ponto(){
-        if(current_symbol.getValue().equals(".")){
-            return current_symbol.getClassification().equals("Ponto Final");
-        }
-        
-        if(current_symbol.getValue().equals("!")){
-            return current_symbol.getClassification().equals("Ponto Exclamacao");
-        }
-        
-        if(current_symbol.getValue().equals(".")){
-            return current_symbol.getClassification().equals("Ponto Final");
-        }
-    }
-    */
-
-    private void sentenca() throws MismatchSymbolException{
-        getNextSym();
-        sintagma_nominal();
-        sintagma_verbal();
-    }
-    
-    
-    private void sintagma_nominal()throws MismatchSymbolException {
-        getNextSym();
-        
-        /*
-        while(current_symbol.getValue().equals("substantivo") || current_symbol.getValue().equals("pronome") || current_symbol.getValue().equals("adjetivo")){
+        if(current_symbol.getValue().equals("paragrafo")){
             getNextSym();
+            paragrafo_texto();
+        }else{
+            returnPrevSym();
         }
-        */
-        
-      
-        if(current_symbol.getValue().equals("substantivo") || current_symbol.getValue().equals("pronome") || current_symbol.getValue().equals("adjetivo")){
+    }
+    
+    private void frases(){
+        getNextSym();
+        oracao();
+        if(current_symbol.getValue().equals(".") | current_symbol.getValue().equals("?") | current_symbol.getValue().equals("!")){
          getNextSym();
-        }  if(current_symbol.getValue().equals("substantivo") || current_symbol.getValue().equals("pronome") || current_symbol.getValue().equals("adjetivo")){
+         frases();
+        }
+        else{
+            returnPrevSym();
+        }
+    }
+    
+    private void oracao(){
+        getNextSym();
+        np();
+        getNextSym();
+        vp();
+    }
+    
+    private void np(){
+        getNextSym();
+        adjetivopc();
+        getNextSym();
+        np_linha();
+    }
+    
+    private void np_linha(){
+        getNextSym();
+        np_linha_linha();
+        getNextSym();
+        np();
+    }
+    
+    private void np_linha_linha(){
+        getNextSym();
+        if(current_symbol.getValue().equals("pronome")){
+            getNextSym(); 
+            if(current_symbol.getValue().equals("substantivo")){
+                getNextSym();
+                adjetivopc();
+            }
+        }else{
+            returnPrevSym();
+        }
+    }
+    
+    private void adjetivopc(){
+        getNextSym();
+        if(current_symbol.getValue().equals("adjetivo")){
             getNextSym();
-        } if(current_symbol.getValue().equals("substantivo") || current_symbol.getValue().equals("pronome") || current_symbol.getValue().equals("adjetivo")){
+            adjetivopc();
+        }else{
+            returnPrevSym();
+        }
+        
+    }
+    
+    private void vp(){
+        getNextSym();
+        adverbiopc();
+        getNextSym();
+        if(current_symbol.getValue().equals("verbo")){
+            getNextSym();
+            loc_verbal();
+            getNextSym();
+            adverbiopc();
+            getNextSym();
+            vp_complemento();
+            
+        }
+    }
+    
+    
+    private void adverbiopc(){
+        getNextSym();
+        if(current_symbol.getValue().equals("adverbio")){
             getNextSym();
         }else{
-         throw new MismatchSymbolException("Esperando sintagma nominal na linha " + current_symbol.getLine() + " antes de " + current_symbol.getValue());   
+            returnPrevSym();
         }
-        
     }
     
-    private void sintagma_verbal()throws MismatchSymbolException{
+    private void loc_verbal(){
         getNextSym();
-        if(current_symbol.getValue().equals("verbo") || current_symbol.getValue().equals("adverbio") ){
-         getNextSym();
-        } else if(current_symbol.getValue().equals("verbo") || current_symbol.getValue().equals("adverbio") ){
+        if(current_symbol.getValue().equals("verbo")){
             getNextSym();
-        } else{
-            getNextSym();
-            sintagma_nominal();  
+        }else{
+            returnPrevSym();
         }
     }
+    
+    private void vp_complemento(){
+        getNextSym();
+        if(current_symbol.getValue().equals("citacao")){
+            getNextSym();
+            oracao();
+            getNextSym();
+            citacao_bugada();
+            getNextSym();
+        }else{  
+            np();
+        }
+    }
+    
+    private void citacao_bugada(){
+        getNextSym();
+        if(current_symbol.getValue().equals("citacao")){
+            getNextSym();
+        }
+     } 
 	 
 	 
 	
