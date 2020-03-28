@@ -29,6 +29,7 @@ public class Automaton {
             put(3, "Ponto Exclamacao");
             put(4, "Ponto Interrogacao");
             put(5, "Virgula");
+            put(6, "Citacao");
         }
     };
     
@@ -73,6 +74,8 @@ public class Automaton {
                     state = 4;
                 } else if (symbol.equals(",")) {
                     state = 5;
+                } else if(symbol.equals("\"")) {
+                    state = 6;
                 } else {
                     return false;
                 }
@@ -94,6 +97,9 @@ public class Automaton {
                 return false;
             //virgula
             case 5:
+                return false;
+            //aspas
+            case 6:
                 return false;
         }
         return true;
